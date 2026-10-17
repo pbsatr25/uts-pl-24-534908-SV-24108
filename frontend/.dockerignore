@@ -1,0 +1,23 @@
+# Build context image frontend (folder frontend/).
+
+# Dependency dipasang ulang lewat `npm ci`, hasil build dibuat ulang di dalam image
+node_modules
+dist
+dist-ssr
+coverage
+.eslintcache
+
+# Berkas environment lokal; nilai build diberikan lewat --build-arg VITE_API_URL
+.env
+.env.*
+!.env.example
+
+# Tidak dibutuhkan untuk build produksi
+Dockerfile
+.dockerignore
+src/**/__tests__
+vitest.config.js
+README.md
+.vscode
+.idea
+*.log

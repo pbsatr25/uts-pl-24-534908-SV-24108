@@ -89,6 +89,28 @@ environment variable `VITE_API_URL` (contoh di [`frontend/.env.example`](fronten
 bukan ditulis di komponen. Nilainya `/api`: saat `npm run dev` diteruskan proxy Vite ke
 `http://127.0.0.1:8000`, dan di Docker diteruskan Nginx ke service `backend`.
 
+## Image Docker
+
+| Image | Dockerfile | Isi |
+| --- | --- | --- |
+| Backend | [`backend/Dockerfile`](backend/Dockerfile) | Multi-stage `vendor` → `runtime`, base `dunglas/frankenphp:1.12.7-php8.2.34-alpine`. Laravel dilayani **FrankenPHP** di port 8000, berjalan sebagai user `laravel` (bukan root) |
+| Frontend | [`frontend/Dockerfile`](frontend/Dockerfile) | Multi-stage: `node:24.21.0-alpine3.24` menjalankan `npm ci` + `npm run build`, lalu hasil `dist/` disajikan `nginxinc/nginx-unprivileged:1.31.6-alpine3.24` di port 8080 (tanpa `node_modules`) |
+
+`composer.json` + `composer.lock` (dan `package.json` + `package-lock.json`) disalin dan dipasang
+sebelum kode aplikasi, sehingga layer dependency tetap diambil dari cache selama dependency tidak
+berubah. Berkas yang tidak perlu masuk build context disaring oleh `.dockerignore` di masing-masing
+folder. Tidak ada nilai rahasia di Dockerfile: `APP_KEY` dan kredensial basis data diberikan saat
+container dijalankan.
+
+```bash
+docker build -t uts-backend ./backend
+docker build -t uts-frontend --build-arg VITE_API_URL=/api ./frontend
+```
+
+Access log Caddy dinyalakan (`CADDY_SERVER_EXTRA_DIRECTIVES="log"`), sehingga setiap request API
+tercatat di `docker logs` sebagai bukti dilayani FrankenPHP; header `Authorization` otomatis
+disamarkan menjadi `REDACTED`.
+
 ## Alur branch
 
 ```
