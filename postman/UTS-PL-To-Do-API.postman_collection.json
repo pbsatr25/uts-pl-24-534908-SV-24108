@@ -1,22 +1,12 @@
 {
   "info": {
+    "_postman_id": "c69c818a-b1ac-47f5-beeb-2adfa69b7305",
     "name": "UTS PL - To-Do List API",
     "description": "RESTful API To-Do List (Laravel 12 + Sanctum) untuk UTS Konstruksi dan Evolusi Perangkat Lunak.\n\nPrihastomo Budi Satrio - 24/534908/SV/24108.\n\nJalankan berurutan lewat Run collection. Request Login menyimpan token ke variabel `token`, request Tambah tugas menyimpan `tugas_id`, dan request Logout mengosongkan token lagi.\n\n`base_url`:\n- lokal (`php artisan serve`): http://127.0.0.1:8000/api\n- Docker Compose lewat frontend Nginx: http://localhost:8080/api\n- Docker Compose langsung ke backend: http://localhost:8000/api",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50393220",
+    "_collection_link": "https://go.postman.co/collection/50393220-c69c818a-b1ac-47f5-beeb-2adfa69b7305?source=collection_link"
   },
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      { "key": "token", "value": "{{token}}", "type": "string" }
-    ]
-  },
-  "variable": [
-    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
-    { "key": "email", "value": "admin@kepl.test", "type": "string" },
-    { "key": "password", "value": "password", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "tugas_id", "value": "", "type": "string" }
-  ],
   "item": [
     {
       "name": "1. Auth",
@@ -40,15 +30,35 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"email\": \"bukan-email\"\n}" },
-            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"bukan-email\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Login - password salah (401)",
@@ -67,15 +77,35 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"salah-total\"\n}" },
-            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"salah-total\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Login - berhasil (200)",
@@ -97,15 +127,35 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}" },
-            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Me - data user login (200)",
@@ -125,9 +175,23 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -151,11 +215,27 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/tugas", "host": ["{{base_url}}"], "path": ["tugas"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Tambah tugas - validasi gagal (422)",
@@ -179,12 +259,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"judul\": \"\",\n    \"prioritas\": \"darurat\"\n}" },
-            "url": { "raw": "{{base_url}}/tugas", "host": ["{{base_url}}"], "path": ["tugas"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"\",\n    \"prioritas\": \"darurat\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Tambah tugas (201)",
@@ -208,12 +306,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"judul\": \"Uji tugas dari Postman\",\n    \"deskripsi\": \"Dibuat lewat Postman Collection\",\n    \"prioritas\": \"tinggi\",\n    \"tenggat\": \"2026-10-25\",\n    \"status\": \"belum\"\n}" },
-            "url": { "raw": "{{base_url}}/tugas", "host": ["{{base_url}}"], "path": ["tugas"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"Uji tugas dari Postman\",\n    \"deskripsi\": \"Dibuat lewat Postman Collection\",\n    \"prioritas\": \"tinggi\",\n    \"tenggat\": \"2026-10-25\",\n    \"status\": \"belum\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Daftar tugas (200)",
@@ -234,9 +350,23 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/tugas", "host": ["{{base_url}}"], "path": ["tugas"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Daftar tugas - filter status belum (200)",
@@ -256,14 +386,29 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/tugas?status=belum",
-              "host": ["{{base_url}}"],
-              "path": ["tugas"],
-              "query": [{ "key": "status", "value": "belum" }]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "belum"
+                }
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Detail tugas (200)",
@@ -283,9 +428,24 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Ubah tugas - PUT (200)",
@@ -308,12 +468,31 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"judul\": \"Uji tugas dari Postman (diubah)\",\n    \"deskripsi\": \"Sudah diubah lewat PUT\",\n    \"prioritas\": \"sedang\",\n    \"tenggat\": \"2026-10-24\",\n    \"status\": \"proses\"\n}" },
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"Uji tugas dari Postman (diubah)\",\n    \"deskripsi\": \"Sudah diubah lewat PUT\",\n    \"prioritas\": \"sedang\",\n    \"tenggat\": \"2026-10-24\",\n    \"status\": \"proses\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Ubah status saja - PATCH (200)",
@@ -336,12 +515,31 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"status\": \"selesai\"\n}" },
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"selesai\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Ubah tugas - validasi gagal (422)",
@@ -362,12 +560,31 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Accept", "value": "application/json" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n    \"status\": \"tidak-dikenal\"\n}" },
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"tidak-dikenal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Hapus tugas (200)",
@@ -387,9 +604,24 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Detail tugas yang sudah dihapus (404)",
@@ -409,9 +641,24 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/tugas/{{tugas_id}}", "host": ["{{base_url}}"], "path": ["tugas", "{{tugas_id}}"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -439,9 +686,23 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Me - token yang sudah dicabut (401)",
@@ -460,14 +721,71 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{token_lama}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_lama}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
-            "header": [{ "key": "Accept", "value": "application/json" }],
-            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
-          }
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "admin@kepl.test",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tugas_id",
+      "value": "",
+      "type": "string"
     }
   ]
 }
