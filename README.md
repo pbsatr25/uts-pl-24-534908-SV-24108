@@ -69,11 +69,25 @@ Frontend (Node.js 24):
 ```bash
 cd frontend
 npm ci
-npm run dev                # http://localhost:5173
+npm run dev                # http://localhost:5173 (backend harus jalan di port 8000)
 npm run lint
 npm run test:unit -- --run
 npm run build
 ```
+
+Halaman frontend:
+
+| Path | Isi |
+| --- | --- |
+| `/login` | Form login; token disimpan di `localStorage` |
+| `/tugas` | Daftar tugas, filter status, tandai selesai, hapus |
+| `/tugas/tambah`, `/tugas/:id/ubah` | Form tambah dan ubah tugas, error 422 tampil per field |
+
+Semua request lewat satu instance Axios ([`frontend/src/lib/http.js`](frontend/src/lib/http.js)) yang
+menambahkan header `Authorization: Bearer <token>` di setiap request. Alamat API diambil dari
+environment variable `VITE_API_URL` (contoh di [`frontend/.env.example`](frontend/.env.example)),
+bukan ditulis di komponen. Nilainya `/api`: saat `npm run dev` diteruskan proxy Vite ke
+`http://127.0.0.1:8000`, dan di Docker diteruskan Nginx ke service `backend`.
 
 ## Alur branch
 
