@@ -1,0 +1,7 @@
+# Semua berkas teks disimpan dengan akhiran baris LF, termasuk saat di-checkout di Windows.
+# Script shell ber-CRLF gagal dijalankan di container Linux ("no such file or directory").
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary

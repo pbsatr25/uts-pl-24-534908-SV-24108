@@ -1,0 +1,7 @@
+# Konfigurasi rahasia untuk Docker Compose (salin dari .env.example)
+.env
+
+# Berkas sistem operasi dan editor
+.DS_Store
+Thumbs.db
+.idea/
