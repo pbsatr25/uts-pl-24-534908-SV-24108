@@ -1,0 +1,791 @@
+{
+  "info": {
+    "_postman_id": "c69c818a-b1ac-47f5-beeb-2adfa69b7305",
+    "name": "UTS PL - To-Do List API",
+    "description": "RESTful API To-Do List (Laravel 12 + Sanctum) untuk UTS Konstruksi dan Evolusi Perangkat Lunak.\n\nPrihastomo Budi Satrio - 24/534908/SV/24108.\n\nJalankan berurutan lewat Run collection. Request Login menyimpan token ke variabel `token`, request Tambah tugas menyimpan `tugas_id`, dan request Logout mengosongkan token lagi.\n\n`base_url`:\n- lokal (`php artisan serve`): http://127.0.0.1:8000/api\n- Docker Compose lewat frontend Nginx: http://localhost:8080/api\n- Docker Compose langsung ke backend: http://localhost:8000/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50393220",
+    "_collection_link": "https://go.postman.co/collection/50393220-c69c818a-b1ac-47f5-beeb-2adfa69b7305?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login - validasi gagal (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Content', () => pm.response.to.have.status(422));",
+                  "pm.test('Error validasi untuk email dan password', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errors).to.have.property('email');",
+                  "    pm.expect(json.errors).to.have.property('password');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"bukan-email\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - password salah (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Pesan email/password salah', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Email atau password salah.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"salah-total\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - berhasil (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('Response berisi token Bearer', () => {",
+                  "    pm.expect(json.token_type).to.eql('Bearer');",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "pm.collectionVariables.set('token', json.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me - data user login (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Email sesuai akun login', () => {",
+                  "    pm.expect(pm.response.json().data.email).to.eql(pm.collectionVariables.get('email'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Tugas (CRUD)",
+      "item": [
+        {
+          "name": "Daftar tugas - tanpa token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Pesan Unauthenticated', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Unauthenticated.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tambah tugas - validasi gagal (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Content', () => pm.response.to.have.status(422));",
+                  "pm.test('Error validasi judul, prioritas, dan status', () => {",
+                  "    const errors = pm.response.json().errors;",
+                  "    pm.expect(errors).to.have.property('judul');",
+                  "    pm.expect(errors).to.have.property('prioritas');",
+                  "    pm.expect(errors).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"\",\n    \"prioritas\": \"darurat\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Tambah tugas (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('Data tugas baru dikembalikan', () => {",
+                  "    pm.expect(json.data.judul).to.eql('Uji tugas dari Postman');",
+                  "    pm.expect(json.data.id).to.be.a('number');",
+                  "});",
+                  "pm.collectionVariables.set('tugas_id', json.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"Uji tugas dari Postman\",\n    \"deskripsi\": \"Dibuat lewat Postman Collection\",\n    \"prioritas\": \"tinggi\",\n    \"tenggat\": \"2026-10-25\",\n    \"status\": \"belum\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daftar tugas (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Tugas yang baru dibuat ada di daftar', () => {",
+                  "    const id = Number(pm.collectionVariables.get('tugas_id'));",
+                  "    pm.expect(pm.response.json().data.map(t => t.id)).to.include(id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Daftar tugas - filter status belum (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Semua tugas berstatus belum', () => {",
+                  "    pm.response.json().data.forEach(t => pm.expect(t.status).to.eql('belum'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas?status=belum",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "belum"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail tugas (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('ID sesuai', () => {",
+                  "    pm.expect(pm.response.json().data.id).to.eql(Number(pm.collectionVariables.get('tugas_id')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ubah tugas - PUT (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Data sudah berubah', () => {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.judul).to.eql('Uji tugas dari Postman (diubah)');",
+                  "    pm.expect(data.status).to.eql('proses');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"judul\": \"Uji tugas dari Postman (diubah)\",\n    \"deskripsi\": \"Sudah diubah lewat PUT\",\n    \"prioritas\": \"sedang\",\n    \"tenggat\": \"2026-10-24\",\n    \"status\": \"proses\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ubah status saja - PATCH (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Status menjadi selesai, judul tetap', () => {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.status).to.eql('selesai');",
+                  "    pm.expect(data.judul).to.eql('Uji tugas dari Postman (diubah)');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"selesai\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ubah tugas - validasi gagal (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Content', () => pm.response.to.have.status(422));",
+                  "pm.test('Error validasi status', () => {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('status');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"tidak-dikenal\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Hapus tugas (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Pesan berhasil dihapus', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Tugas berhasil dihapus.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detail tugas yang sudah dihapus (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Pesan data tidak ditemukan', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Data tidak ditemukan.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tugas/{{tugas_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tugas",
+                "{{tugas_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Logout",
+      "item": [
+        {
+          "name": "Logout (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Token dicabut', () => {",
+                  "    pm.expect(pm.response.json().message).to.include('token sudah dicabut');",
+                  "});",
+                  "// Token lama disimpan sementara untuk request berikutnya, lalu dihapus dari collection.",
+                  "pm.collectionVariables.set('token_lama', pm.collectionVariables.get('token'));",
+                  "pm.collectionVariables.set('token', '');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me - token yang sudah dicabut (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.collectionVariables.unset('token_lama');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_lama}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "admin@kepl.test",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "password",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tugas_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
