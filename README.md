@@ -1,6 +1,6 @@
 # uts-pl-24-534908-SV-24108
 
-[![CI/CD](https://github.com/budisatrio32/uts-pl-24-534908-SV-24108/actions/workflows/ci.yml/badge.svg)](https://github.com/budisatrio32/uts-pl-24-534908-SV-24108/actions/workflows/ci.yml)
+[![CI/CD](https://github.com/pbsatr25/uts-pl-24-534908-SV-24108/actions/workflows/ci.yml/badge.svg)](https://github.com/pbsatr25/uts-pl-24-534908-SV-24108/actions/workflows/ci.yml)
 
 Ujian Tengah Semester mata kuliah **Konstruksi dan Evolusi Perangkat Lunak** (SVPL261501),
 Sekolah Vokasi Universitas Gadjah Mada.
