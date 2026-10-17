@@ -1,6 +1,6 @@
 export const LABEL_STATUS = {
   belum: 'Belum',
-  proses: 'Proses',
+  proses: 'Dikerjakan',
   selesai: 'Selesai',
 }
 
