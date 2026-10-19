@@ -111,6 +111,29 @@ Access log Caddy dinyalakan (`CADDY_SERVER_EXTRA_DIRECTIVES="log"`), sehingga se
 tercatat di `docker logs` sebagai bukti dilayani FrankenPHP; header `Authorization` otomatis
 disamarkan menjadi `REDACTED`.
 
+## Menjalankan seluruh sistem dengan Docker Compose
+
+```
+Browser ──:8080──► frontend (Nginx) ──/api──► backend:8000 (FrankenPHP) ──► db:3306 (MySQL)
+```
+
+| Service | Image | Port di laptop | Keterangan |
+| --- | --- | --- | --- |
+| `db` | `mysql:8.4.11` | tidak dibuka | Data di named volume `db-data` |
+| `backend` | build `backend/` | 8000 | Terhubung ke host `db` (nama service) |
+| `frontend` | build `frontend/` | 8080 | Meneruskan `/api` ke `http://backend:8000` (nama service) |
+
+```bash
+cp .env.example .env        # lalu isi APP_KEY, DB_PASSWORD, DB_ROOT_PASSWORD
+docker compose up -d --build
+docker compose ps           # ketiga service berstatus (healthy)
+sh scripts/smoke-test.sh    # uji login dan CRUD lewat http://localhost:8080
+```
+
+Buka `http://localhost:8080` dan login dengan akun demo. Kredensial basis data dibaca dari `.env`
+(tidak di-commit; contohnya di [`.env.example`](.env.example)). `docker compose down` menghapus
+container tetapi data tetap tersimpan di volume; `docker compose down -v` ikut menghapus volume.
+
 ## Alur branch
 
 ```
