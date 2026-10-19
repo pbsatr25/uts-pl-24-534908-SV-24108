@@ -85,3 +85,112 @@ jobs:
           name: frontend-dist
           path: frontend/dist
           retention-days: 3
+
+  deploy:
+    name: Deploy (GHCR)
+    needs: [backend, frontend]
+    # Hanya untuk push ke main (hasil merge PR dev -> main). Pada Pull Request, branch dev,
+    # dan branch fitur, job ini berstatus "skipped": workflow berhenti setelah test dan build.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Environment production: job menunggu persetujuan reviewer sebelum berjalan.
+    environment:
+      name: production
+      url: ${{ github.server_url }}/${{ github.repository }}/pkgs/container/${{ steps.meta.outputs.package }}-backend
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: write          # GITHUB_TOKEN boleh mengunggah image ke ghcr.io
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # Nama image di GHCR wajib huruf kecil (nama repo memuat "SV").
+      # Tag hanya nomor commit (sha-xxxxxxx), tidak ada tag latest.
+      - name: Tentukan nama dan tag image
+        id: meta
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          PACKAGE="${GITHUB_REPOSITORY#*/}"
+          PACKAGE="${PACKAGE,,}"
+          TAG="sha-${GITHUB_SHA::7}"
+          {
+            echo "package=${PACKAGE}"
+            echo "backend=ghcr.io/${OWNER}/${PACKAGE}-backend"
+            echo "frontend=ghcr.io/${OWNER}/${PACKAGE}-frontend"
+            echo "tag=${TAG}"
+          } >> "$GITHUB_OUTPUT"
+          echo "Backend : ghcr.io/${OWNER}/${PACKAGE}-backend:${TAG}"
+          echo "Frontend: ghcr.io/${OWNER}/${PACKAGE}-frontend:${TAG}"
+
+      # Rahasia hanya ada di GitHub Secrets dan file .env sementara di runner ini.
+      # Nilainya tidak pernah dicetak; GitHub juga menyamarkannya menjadi *** di log.
+      - name: Buat .env dari Secrets
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || '/api' }}
+          BACKEND_IMAGE: ${{ steps.meta.outputs.backend }}
+          FRONTEND_IMAGE: ${{ steps.meta.outputs.frontend }}
+          IMAGE_TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          : "${APP_KEY:?Secret APP_KEY belum diisi}"
+          : "${DB_PASSWORD:?Secret DB_PASSWORD belum diisi}"
+          : "${DB_ROOT_PASSWORD:?Secret DB_ROOT_PASSWORD belum diisi}"
+          cat > .env <<EOF
+          APP_KEY=${APP_KEY}
+          DB_DATABASE=todo_uts
+          DB_USERNAME=todo
+          DB_PASSWORD=${DB_PASSWORD}
+          DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+          FRONTEND_PORT=8080
+          BACKEND_PORT=8000
+          VITE_API_URL=${VITE_API_URL}
+          BACKEND_IMAGE=${BACKEND_IMAGE}
+          FRONTEND_IMAGE=${FRONTEND_IMAGE}
+          IMAGE_TAG=${IMAGE_TAG}
+          IMAGE_REVISION=${GITHUB_SHA}
+          EOF
+          echo "Isi .env (nilai rahasia disamarkan):"
+          sed -E 's/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD)=.*/\1=<dari GitHub Secrets>/' .env
+
+      - name: Build image backend dan frontend (Dockerfile soal 5)
+        run: docker compose build
+
+      # Image yang akan diterbitkan diuji dulu sebagai satu stack: MySQL + backend + frontend.
+      - name: Jalankan stack Docker Compose
+        run: docker compose up -d --wait --wait-timeout 180
+
+      - name: Smoke test (login dan CRUD lewat frontend)
+        run: sh scripts/smoke-test.sh http://localhost:8080
+
+      - name: Tampilkan log bila gagal
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Login ke ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image ke GitHub Container Registry
+        run: |
+          docker compose push backend frontend
+          docker image ls --filter "reference=ghcr.io/*/*"
+          {
+            echo "### Image terbit di GitHub Container Registry"
+            echo ""
+            echo "| Image | Tag |"
+            echo "| --- | --- |"
+            echo "| \`${{ steps.meta.outputs.backend }}\` | \`${{ steps.meta.outputs.tag }}\` |"
+            echo "| \`${{ steps.meta.outputs.frontend }}\` | \`${{ steps.meta.outputs.tag }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Hentikan stack
+        if: always()
+        run: docker compose down -v

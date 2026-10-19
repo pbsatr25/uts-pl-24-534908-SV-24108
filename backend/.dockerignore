@@ -1,0 +1,41 @@
+# Build context image backend (folder backend/). Semakin sedikit yang masuk,
+# semakin cepat build dan semakin jarang cache layer batal tanpa alasan.
+
+# Dependency dipasang ulang di dalam image; rahasia tidak boleh ikut
+vendor
+node_modules
+.env
+.env.*
+!.env.example
+
+# Konfigurasi Docker dan editor yang tidak dibutuhkan saat runtime
+Dockerfile
+.dockerignore
+.editorconfig
+.gitignore
+.gitattributes
+.vscode
+.idea
+
+# Basis data dan berkas sementara milik laptop
+database/*.sqlite*
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+bootstrap/cache/*.php
+.phpunit.result.cache
+.phpunit.cache
+
+# Pengujian dan dokumentasi, tidak dibutuhkan saat melayani request
+tests
+phpunit.xml
+README.md
+
+# Aset frontend bawaan Laravel (Vite); frontend aplikasi ada di folder frontend/
+package.json
+package-lock.json
+vite.config.js
+public/hot
+public/build

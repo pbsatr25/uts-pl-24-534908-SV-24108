@@ -1,0 +1,49 @@
+# Diproses envsubst saat container start: ${API_UPSTREAM} dan ${NGINX_LOCAL_RESOLVERS}
+# diganti nilai environment. Variabel Nginx (misalnya $host) tidak tersentuh karena
+# bukan environment variable.
+
+server {
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+
+    # DNS internal Docker (diisi otomatis dari /etc/resolv.conf oleh image Nginx).
+    # Nama service "backend" di-resolve saat request datang, bukan saat Nginx start,
+    # sehingga frontend tetap bisa start walaupun backend belum siap atau dibuat ulang.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s ipv6=off;
+
+    # Semua request /api/* diteruskan ke Laravel (FrankenPHP) di container backend.
+    location /api/ {
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Berkas hasil build Vite memakai hash di namanya, aman di-cache lama.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # Endpoint healthcheck container.
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # SPA: rute Vue Router (/login, /tugas/3/ubah, ...) dilayani index.html.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
