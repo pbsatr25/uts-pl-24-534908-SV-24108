@@ -43,6 +43,10 @@ services:
   backend:
     build:
       context: ./backend
+      labels: &label-image
+        # Menautkan image di GitHub Container Registry ke repository ini.
+        org.opencontainers.image.source: https://github.com/pbsatr25/uts-pl-24-534908-SV-24108
+        org.opencontainers.image.revision: ${IMAGE_REVISION:-local}
     image: ${BACKEND_IMAGE:-uts-pl-backend}:${IMAGE_TAG:-local}
     restart: unless-stopped
     environment:
@@ -71,6 +75,7 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: ${VITE_API_URL:-/api}   # nilai publik, ikut tertanam di berkas JS
+      labels: *label-image
     image: ${FRONTEND_IMAGE:-uts-pl-frontend}:${IMAGE_TAG:-local}
     restart: unless-stopped
     environment:

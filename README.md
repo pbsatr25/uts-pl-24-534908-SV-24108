@@ -134,6 +134,21 @@ Buka `http://localhost:8080` dan login dengan akun demo. Kredensial basis data d
 (tidak di-commit; contohnya di [`.env.example`](.env.example)). `docker compose down` menghapus
 container tetapi data tetap tersimpan di volume; `docker compose down -v` ikut menghapus volume.
 
+## CI/CD (GitHub Actions)
+
+Workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) berisi tiga job:
+
+| Job | Kapan berjalan | Isi |
+| --- | --- | --- |
+| `Backend Test` | Setiap push dan Pull Request | Laravel Pint + `php artisan test` |
+| `Frontend Test` | Setiap push dan Pull Request | `npm ci`, lint, Vitest, `npm run build` |
+| `Deploy (GHCR)` | **Hanya push ke `main`**, setelah kedua job di atas lulus dan disetujui di environment `production` | Build image backend dan frontend, uji sebagai stack Docker Compose (smoke test), lalu push ke GitHub Container Registry |
+
+Image diterbitkan sebagai `ghcr.io/pbsatr25/uts-pl-24-534908-sv-24108-backend` dan
+`ghcr.io/pbsatr25/uts-pl-24-534908-sv-24108-frontend` dengan tag nomor commit `sha-xxxxxxx`
+(tidak ada tag `latest`). Nilai rahasia (`APP_KEY`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`) disimpan di
+GitHub Secrets, sedangkan `VITE_API_URL` (nilai publik) di GitHub Variables.
+
 ## Alur branch
 
 ```
