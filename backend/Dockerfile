@@ -45,6 +45,7 @@ RUN install-php-extensions pdo_mysql
 # Konfigurasi produksi PHP bawaan image (display_errors=Off, dsb) + pengaturan proyek.
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY docker/php/app.ini $PHP_INI_DIR/conf.d/zz-app.ini
+COPY docker/caddy/access-log.caddy /etc/frankenphp/access-log.caddy
 
 # User biasa tanpa hak root. Caddy butuh menulis ke /config/caddy dan /data/caddy,
 # dan Laravel butuh membuat .env di /app. Folder /app bawaan base image dimiliki root,
@@ -62,29 +63,34 @@ COPY --from=vendor --chown=laravel:laravel /app /app
 
 RUN chmod +x docker/entrypoint.sh
 
+# LOG_CHANNEL=stdout: log Laravel ditulis ke stdout sebagai JSON, bukan ke storage/logs di dalam
+# container, sehingga dikumpulkan Docker (`docker compose logs backend`) dan ikut dirotasi Docker.
+#
 # Hanya nilai yang TIDAK rahasia. APP_KEY, password basis data, dan sejenisnya
 # diberikan saat container dijalankan (docker run -e / docker compose + .env),
 # karena isi Dockerfile ikut tersimpan di metadata image dan bisa dibaca siapa pun.
 #
-# CADDY_SERVER_EXTRA_DIRECTIVES="log" menyalakan access log Caddy (mati secara bawaan),
-# sehingga setiap request API tercatat di `docker logs` sebagai bukti dilayani FrankenPHP.
-# Header Authorization otomatis disamarkan (REDACTED) oleh Caddy.
+# CADDY_SERVER_EXTRA_DIRECTIVES menyalakan access log Caddy (mati secara bawaan) lewat
+# docker/caddy/access-log.caddy, sehingga setiap request API tercatat di `docker logs` sebagai
+# bukti dilayani FrankenPHP. IP klien dihapus dari log; header Authorization disamarkan (REDACTED).
 ENV APP_ENV=production \
     APP_DEBUG=false \
-    LOG_CHANNEL=stderr \
+    LOG_CHANNEL=stdout \
+    LOG_LEVEL=info \
     SERVER_NAME=:8000 \
     SERVER_ROOT=/app/public \
     CADDY_GLOBAL_OPTIONS="admin off" \
-    CADDY_SERVER_EXTRA_DIRECTIVES="log"
+    CADDY_SERVER_EXTRA_DIRECTIVES="import /etc/frankenphp/access-log.caddy"
 
 USER laravel
 
 EXPOSE 8000
 
-# Docker memanggil endpoint /up (health route bawaan Laravel) secara berkala.
-# Tiga kali gagal berturut-turut = status unhealthy.
-HEALTHCHECK --interval=10s --timeout=3s --start-period=30s --retries=3 \
-    CMD wget -q --spider http://127.0.0.1:8000/up || exit 1
+# Docker memanggil endpoint /health secara berkala. /health benar-benar memeriksa basis data
+# dan cache, lalu membalas 503 bila salah satunya bermasalah (wget keluar dengan kode gagal).
+# Tiga kali gagal berturut-turut = status unhealthy. docker-compose.yml menimpa nilai ini.
+HEALTHCHECK --interval=10s --timeout=8s --start-period=40s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:8000/health || exit 1
 
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
 CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
