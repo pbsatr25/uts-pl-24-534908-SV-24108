@@ -10,6 +10,18 @@
 # ===========================================================================
 name: uts-pl-todo
 
+# ---------------------------------------------------------------------------
+# Batas ukuran log container. Driver json-file bawaan Docker tidak punya batas,
+# sehingga log bisa terus membesar sampai disk penuh. Dengan pengaturan ini tiap
+# container menyimpan paling banyak 3 berkas x 10 MB; berkas tertua dibuang
+# otomatis (rotasi). Dipakai ketiga service lewat `logging: *logging-terbatas`.
+# ---------------------------------------------------------------------------
+x-logging: &logging-terbatas
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   # -------------------------------------------------------------------------
   # Basis data MySQL. Port 3306 sengaja tidak dibuka ke laptop: hanya service
@@ -24,18 +36,16 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi di .env}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD wajib diisi di .env}
     volumes:
-      # Named volume: data tetap ada walaupun container dihapus (docker compose down).
       - db-data:/var/lib/mysql
     networks:
       - todo-net
     healthcheck:
-      # Lewat TCP (127.0.0.1), jadi baru sehat setelah server MySQL yang sebenarnya
-      # berjalan, bukan server sementara saat inisialisasi pertama.
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
       start_period: 30s
+    logging: *logging-terbatas
 
   # -------------------------------------------------------------------------
   # Backend Laravel 12 dilayani FrankenPHP. Dibangun dari backend/Dockerfile.
@@ -54,18 +64,40 @@ services:
       APP_KEY: ${APP_KEY:?APP_KEY wajib diisi di .env}
       APP_URL: http://localhost:${FRONTEND_PORT:-8080}
       DB_CONNECTION: mysql
-      DB_HOST: db                        # nama service MySQL di atas, bukan IP laptop
+      DB_HOST: db
       DB_PORT: 3306
       DB_DATABASE: ${DB_DATABASE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      DB_TIMEOUT: 3                      # detik; saat MySQL mati, request gagal cepat
+      # Log Laravel ke stdout (JSON satu baris per kejadian), bukan berkas di container.
+      LOG_CHANNEL: stdout
+      LOG_LEVEL: info
+      # Cache berkas di dalam container, terpisah dari MySQL, sehingga /health bisa
+      # menunjukkan bagian mana yang bermasalah (database atau cache).
+      CACHE_STORE: file
     depends_on:
       db:
-        condition: service_healthy       # tunggu MySQL siap, bukan sekadar start
+        condition: service_healthy
     ports:
-      - "${BACKEND_PORT:-8000}:8000"     # dibuka untuk pengujian lewat Postman
+      - "${BACKEND_PORT:-8000}:8000"
     networks:
       - todo-net
+    # Saat container db mati, nama "db" hilang dari DNS internal Docker dan pencariannya
+    # diteruskan ke DNS luar yang lambat (~15 detik). Batas 1 detik membuat koneksi dan
+    # /health langsung gagal dengan sebab yang jelas, bukan menggantung sampai timeout.
+    dns_opt:
+      - timeout:1
+      - attempts:1
+    # /health memeriksa basis data dan cache; membalas 503 (wget gagal) bila ada
+    # yang bermasalah. 3 kali gagal berturut-turut (~30 detik) = unhealthy.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 8s
+      retries: 3
+      start_period: 40s
+    logging: *logging-terbatas
 
   # -------------------------------------------------------------------------
   # Frontend Vue 3 hasil build, dilayani Nginx. Dibangun dari frontend/Dockerfile.
@@ -74,12 +106,12 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-/api}   # nilai publik, ikut tertanam di berkas JS
+        VITE_API_URL: ${VITE_API_URL:-/api}
       labels: *label-image
     image: ${FRONTEND_IMAGE:-uts-pl-frontend}:${IMAGE_TAG:-local}
     restart: unless-stopped
     environment:
-      API_UPSTREAM: http://backend:8000  # nama service backend di atas, bukan IP laptop
+      API_UPSTREAM: http://backend:8000
     depends_on:
       backend:
         condition: service_healthy
@@ -87,6 +119,13 @@ services:
       - "${FRONTEND_PORT:-8080}:8080"
     networks:
       - todo-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging: *logging-terbatas
 
 networks:
   todo-net:

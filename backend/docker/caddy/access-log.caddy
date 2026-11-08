@@ -1,0 +1,14 @@
+# Access log Caddy (FrankenPHP), di-import ke blok server lewat CADDY_SERVER_EXTRA_DIRECTIVES.
+# Setiap request tercatat sebagai JSON di stdout/stderr container (docker compose logs backend).
+#
+# Alamat IP klien termasuk data pribadi, jadi dihapus dari log. Header Authorization dan
+# Cookie sudah otomatis disamarkan (REDACTED) oleh Caddy, sehingga token tidak tercatat.
+log {
+	format filter {
+		request>remote_ip delete
+		request>remote_port delete
+		request>client_ip delete
+		request>headers>X-Forwarded-For delete
+		request>headers>X-Real-Ip delete
+	}
+}
