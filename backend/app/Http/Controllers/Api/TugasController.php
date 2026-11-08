@@ -9,6 +9,7 @@ use App\Models\Tugas;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 /**
@@ -33,6 +34,10 @@ class TugasController extends Controller
     {
         $tugas = $request->user()->tugas()->create($request->validated());
 
+        // LOG INFO - data baru tersimpan. Judul dan deskripsi tidak dicatat karena
+        // isinya ditulis bebas oleh user dan bisa memuat data pribadi.
+        $this->catat('Tugas baru disimpan', 'tugas.dibuat', 'menambah tugas', $request, $tugas);
+
         return (new TugasResource($tugas))
             ->additional(['message' => 'Tugas berhasil ditambahkan.'])
             ->response()
@@ -49,13 +54,20 @@ class TugasController extends Controller
         $data = $this->milikUser($request, $tugas);
         $data->update($request->validated());
 
+        $this->catat('Tugas diperbarui', 'tugas.diubah', 'mengubah tugas', $request, $data, [
+            'field_diubah' => array_keys($data->getChanges()),
+        ]);
+
         return (new TugasResource($data))
             ->additional(['message' => 'Tugas berhasil diperbarui.']);
     }
 
     public function destroy(Request $request, string $tugas): JsonResponse
     {
-        $this->milikUser($request, $tugas)->delete();
+        $data = $this->milikUser($request, $tugas);
+        $data->delete();
+
+        $this->catat('Tugas dihapus', 'tugas.dihapus', 'menghapus tugas', $request, $data);
 
         return response()->json(['message' => 'Tugas berhasil dihapus.']);
     }
@@ -63,5 +75,24 @@ class TugasController extends Controller
     private function milikUser(Request $request, string $id): Tugas
     {
         return $request->user()->tugas()->findOrFail($id);
+    }
+
+    /**
+     * Log terstruktur untuk perubahan data: siapa (user_id), mengerjakan apa (aksi),
+     * dan data mana (tugas_id). Hanya id dan nilai pilihan tetap (prioritas, status).
+     *
+     * @param  array<string, mixed>  $tambahan
+     */
+    private function catat(string $pesan, string $event, string $aksi, Request $request, Tugas $tugas, array $tambahan = []): void
+    {
+        Log::info($pesan, [
+            'event' => $event,
+            'user_id' => $request->user()->id,
+            'aksi' => $aksi,
+            'tugas_id' => $tugas->id,
+            'prioritas' => $tugas->prioritas,
+            'status' => $tugas->status,
+            ...$tambahan,
+        ]);
     }
 }
