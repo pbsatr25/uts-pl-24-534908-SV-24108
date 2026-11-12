@@ -1,0 +1,13 @@
+groups:
+  - name: layanan
+    rules:
+      # Target yang gagal ditarik Prometheus = layanannya mati atau tidak terjangkau.
+      - alert: LayananMati
+        expr: up == 0
+        for: 1m          # harus tetap mati 1 menit, supaya restart sesaat tidak membangunkan orang
+        labels:
+          severity: kritis
+        annotations:
+          summary: "Layanan {{ $labels.job }} tidak bisa dihubungi Prometheus selama lebih dari 1 menit"
+          description: "Target {{ $labels.instance }} (job {{ $labels.job }}) gagal ditarik. Selama mati, fitur yang bergantung padanya ikut berhenti."
+          action: "Tindakan pertama: jalankan `docker compose ps {{ $labels.job }}` untuk melihat statusnya, lalu `docker compose logs --tail 50 {{ $labels.job }}` untuk membaca sebab berhentinya. Bila container berhenti, nyalakan dengan `docker compose up -d {{ $labels.job }}`."
