@@ -14,7 +14,7 @@ name: uts-pl-todo
 # Batas ukuran log container. Driver json-file bawaan Docker tidak punya batas,
 # sehingga log bisa terus membesar sampai disk penuh. Dengan pengaturan ini tiap
 # container menyimpan paling banyak 3 berkas x 10 MB; berkas tertua dibuang
-# otomatis (rotasi). Dipakai ketiga service lewat `logging: *logging-terbatas`.
+# otomatis (rotasi). Dipakai semua service lewat `logging: *logging-terbatas`.
 # ---------------------------------------------------------------------------
 x-logging: &logging-terbatas
   driver: json-file
@@ -76,6 +76,10 @@ services:
       # Cache berkas di dalam container, terpisah dari MySQL, sehingga /health bisa
       # menunjukkan bagian mana yang bermasalah (database atau cache).
       CACHE_STORE: file
+      # Metrik HTTP bawaan Caddy (jumlah permintaan per status) untuk Prometheus,
+      # disajikan di port 9180 yang TIDAK dibuka ke laptop (hanya network Compose).
+      CADDY_GLOBAL_OPTIONS: "admin off\nmetrics"
+      CADDY_EXTRA_CONFIG: ":9180 {\n\tmetrics /metrics\n}"
     depends_on:
       db:
         condition: service_healthy
@@ -127,8 +131,71 @@ services:
       start_period: 10s
     logging: *logging-terbatas
 
+  # =========================================================================
+  # Monitoring: Prometheus mengumpulkan angka, Grafana menggambarnya.
+  # Versi image dikunci (bukan latest). Port Prometheus dan Grafana hanya
+  # dibuka ke 127.0.0.1, jadi tidak bisa dijangkau dari komputer lain.
+  # =========================================================================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prom-data:/prometheus            # riwayat metrik tidak hilang saat container diganti
+    ports:
+      - "127.0.0.1:9090:9090"
+    networks:
+      - todo-net
+    logging: *logging-terbatas
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    restart: unless-stopped
+    environment:
+      # Password admin dari .env (tidak di-commit), bukan admin/admin bawaan.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD wajib diisi di .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - todo-net
+    logging: *logging-terbatas
+
+  # CPU dan memori tiap container, dibaca dari cgroup lewat folder host (read-only).
+  cadvisor:
+    # v0.57.0, bukan v0.49.1 dari modul: v0.49.1 memakai Docker API 1.41 yang ditolak
+    # Docker 29 (minimal 1.44), sehingga cAdvisor tidak tahu nama container.
+    image: ghcr.io/google/cadvisor:v0.57.0
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - todo-net
+    logging: *logging-terbatas
+
+  # CPU, memori, dan disk mesin yang menjalankan Docker.
+  node-exporter:
+    image: prom/node-exporter:v1.8.1
+    restart: unless-stopped
+    networks:
+      - todo-net
+    logging: *logging-terbatas
+
 networks:
   todo-net:
 
 volumes:
   db-data:
+  prom-data:
+  grafana-data:
