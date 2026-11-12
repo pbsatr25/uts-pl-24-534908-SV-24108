@@ -1,0 +1,32 @@
+# Prometheus menarik (pull) metrik dari tiap target ini setiap 15 detik.
+# Host memakai NAMA SERVICE Compose, bukan IP atau localhost.
+# job_name sengaja sama dengan nama service, supaya label job="backend" langsung
+# menunjuk service yang bisa dicek dengan `docker compose ps backend`.
+global:
+  scrape_interval: 15s       # seberapa sering metrik ditarik
+  evaluation_interval: 15s   # seberapa sering aturan alarm dinilai
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # CPU dan memori tiap container
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # CPU, memori, dan disk mesin (VM Docker Desktop)
+  - job_name: node-exporter
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Metrik HTTP FrankenPHP/Caddy di backend (jumlah permintaan per status).
+  # Port 9180 hanya terjangkau dari dalam network Compose, tidak dibuka ke laptop.
+  - job_name: backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['backend:9180']
